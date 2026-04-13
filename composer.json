@@ -1,63 +1,85 @@
 {
-    "name": "slim/slim-skeleton",
-    "description": "A Slim Framework skeleton application for rapid development",
+    "name": "squizlabs/php_codesniffer",
+    "description": "PHP_CodeSniffer tokenizes PHP, JavaScript and CSS files and detects violations of a defined set of coding standards.",
+    "license": "BSD-3-Clause",
+    "type": "library",
     "keywords": [
-        "microframework",
-        "rest",
-        "router",
-        "psr7"
+        "phpcs",
+        "standards",
+        "static analysis"
     ],
-    "homepage": "http://github.com/slimphp/Slim-Skeleton",
-    "license": "MIT",
     "authors": [
         {
-            "name": "Josh Lockhart",
-            "email": "info@joshlockhart.com",
-            "homepage": "http://www.joshlockhart.com/"
+            "name": "Greg Sherwood",
+            "role": "Former lead"
         },
         {
-            "name": "Pierre Berube",
-            "email": "pierre@lgse.com",
-            "homepage": "http://www.lgse.com/"
+            "name": "Juliette Reinders Folmer",
+            "role": "Current lead"
+        },
+        {
+            "name": "Contributors",
+            "homepage": "https://github.com/PHPCSStandards/PHP_CodeSniffer/graphs/contributors"
         }
     ],
+    "homepage": "https://github.com/PHPCSStandards/PHP_CodeSniffer",
+    "support": {
+        "issues": "https://github.com/PHPCSStandards/PHP_CodeSniffer/issues",
+        "wiki": "https://github.com/PHPCSStandards/PHP_CodeSniffer/wiki",
+        "source": "https://github.com/PHPCSStandards/PHP_CodeSniffer",
+        "security": "https://github.com/PHPCSStandards/PHP_CodeSniffer/security/policy"
+    },
     "require": {
-        "php": "^7.4 || ^8.0",
-        "ext-json": "*",
-        "firebase/php-jwt": "^7.0",
-        "monolog/monolog": "^2.8",
-        "php-di/php-di": "^6.4",
-        "phpmailer/phpmailer": "^7.0",
-        "slim/psr7": "^1.8",
-        "slim/slim": "^4.10"
+        "php": ">=5.4.0",
+        "ext-simplexml": "*",
+        "ext-tokenizer": "*",
+        "ext-xmlwriter": "*"
     },
     "require-dev": {
-        "jangregor/phpstan-prophecy": "^1.0.0",
-        "phpspec/prophecy-phpunit": "^2.0",
-        "phpstan/extension-installer": "^1.2.0",
-        "phpstan/phpstan": "^1.8",
-        "phpunit/phpunit": "^9.5.26",
-        "squizlabs/php_codesniffer": "^3.7"
+        "phpunit/phpunit": "^4.0 || ^5.0 || ^6.0 || ^7.0 || ^8.0 || ^9.3.4"
     },
+    "bin": [
+        "bin/phpcbf",
+        "bin/phpcs"
+    ],
     "config": {
-        "allow-plugins": {
-            "phpstan/extension-installer": true
-        },
-        "process-timeout": 0,
-        "sort-packages": true
-    },
-    "autoload": {
-        "psr-4": {
-            "App\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\": "tests/"
-        }
+        "lock": false
     },
     "scripts": {
-        "start": "php -S localhost:8080 -t public",
-        "test": "phpunit"
+        "cs": [
+            "@php ./bin/phpcs"
+        ],
+        "cbf": [
+            "@php ./bin/phpcbf"
+        ],
+        "test": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php ./vendor/phpunit/phpunit/phpunit tests/AllTests.php --no-coverage"
+        ],
+        "coverage": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php ./vendor/phpunit/phpunit/phpunit tests/AllTests.php -d max_execution_time=0"
+        ],
+        "coverage-local": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php ./vendor/phpunit/phpunit/phpunit tests/AllTests.php --coverage-html ./build/coverage-html -d max_execution_time=0"
+        ],
+        "build": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php -d phar.readonly=0 -f ./scripts/build-phar.php"
+        ],
+        "check-all": [
+            "@cs",
+            "@test"
+        ]
+    },
+    "scripts-descriptions": {
+        "cs": "Check for code style violations.",
+        "cbf": "Fix code style violations.",
+        "test": "Run the unit tests without code coverage.",
+        "coverage": "Run the unit tests with code coverage.",
+        "coverage-local": "Run the unit tests with code coverage and generate an HTML report in a 'build' directory.",
+        "build": "Create PHAR files for PHPCS and PHPCBF.",
+        "check-all": "Run all checks (phpcs, tests)."
     }
 }
