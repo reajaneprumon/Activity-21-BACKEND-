@@ -1,411 +1,153 @@
-# Prophecy
+# PHP_CodeSniffer
 
-[![Stable release](https://poser.pugx.org/phpspec/prophecy/version.svg)](https://packagist.org/packages/phpspec/prophecy)
-[![Build](https://github.com/phpspec/prophecy/actions/workflows/build.yml/badge.svg)](https://github.com/phpspec/prophecy/actions/workflows/build.yml)
+<div aria-hidden="true">
 
-Prophecy is a highly opinionated yet very powerful and flexible PHP object mocking
-framework. Though initially it was created to fulfil phpspec2 needs, it is flexible
-enough to be used inside any testing framework out there with minimal effort.
+[![Latest Stable Version](https://img.shields.io/github/v/release/PHPCSStandards/PHP_CodeSniffer?label=Stable)](https://github.com/PHPCSStandards/PHP_CodeSniffer/releases)
+[![Validate](https://github.com/PHPCSStandards/PHP_CodeSniffer/actions/workflows/validate.yml/badge.svg?branch=3.x)](https://github.com/PHPCSStandards/PHP_CodeSniffer/actions/workflows/validate.yml)
+[![Test](https://github.com/PHPCSStandards/PHP_CodeSniffer/actions/workflows/test.yml/badge.svg?branch=3.x)][GHA-test]
+[![Coverage Status](https://coveralls.io/repos/github/PHPCSStandards/PHP_CodeSniffer/badge.svg?branch=3.x)](https://coveralls.io/github/PHPCSStandards/PHP_CodeSniffer?branch=3.x)
+[![License](https://img.shields.io/github/license/PHPCSStandards/PHP_CodeSniffer)](https://github.com/PHPCSStandards/PHP_CodeSniffer/blob/HEAD/licence.txt)
 
-## A simple example
+![Minimum PHP Version](https://img.shields.io/packagist/dependency-v/squizlabs/php_codesniffer/php.svg)
+[![Tested on PHP 5.4 to 8.4](https://img.shields.io/badge/tested%20on-PHP%205.4%20|%205.5%20|%205.6%20|%207.0%20|%207.1%20|%207.2%20|%207.3%20|%207.4%20|%208.0%20|%208.1%20|%208.2%20|%208.3%20|%208.4-brightgreen.svg?maxAge=2419200)][GHA-test]
 
-```php
-<?php
+[GHA-test]: https://github.com/PHPCSStandards/PHP_CodeSniffer/actions/workflows/test.yml
 
-class UserTest extends PHPUnit\Framework\TestCase
-{
-    private $prophet;
+</div>
 
-    public function testPasswordHashing()
-    {
-        $hasher = $this->prophet->prophesize('App\Security\Hasher');
-        $user   = new App\Entity\User($hasher->reveal());
+> [!NOTE]
+> This package is the official continuation of the now abandoned [PHP_CodeSniffer package which was created by Squizlabs](https://github.com/squizlabs/PHP_CodeSniffer).
 
-        $hasher->generateHash($user, 'qwerty')->willReturn('hashed_pass');
+## About
 
-        $user->setPassword('qwerty');
+PHP_CodeSniffer is a set of two PHP scripts; the main `phpcs` script that tokenizes PHP, JavaScript and CSS files to detect violations of a defined coding standard, and a second `phpcbf` script to automatically correct coding standard violations. PHP_CodeSniffer is an essential development tool that ensures your code remains clean and consistent.
 
-        $this->assertEquals('hashed_pass', $user->getPassword());
-    }
 
-    protected function setUp()
-    {
-        $this->prophet = new \Prophecy\Prophet;
-    }
+## Requirements
 
-    protected function tearDown()
-    {
-        $this->prophet->checkPredictions();
-    }
-}
-```
+PHP_CodeSniffer requires PHP version 5.4.0 or greater, although individual sniffs may have additional requirements such as external applications and scripts. See the [Configuration Options manual page](https://github.com/PHPCSStandards/PHP_CodeSniffer/wiki/Configuration-Options) for a list of these requirements.
+
+If you're using PHP_CodeSniffer as part of a team, or you're running it on a [CI](https://en.wikipedia.org/wiki/Continuous_integration) server, you may want to configure your project's settings [using a configuration file](https://github.com/PHPCSStandards/PHP_CodeSniffer/wiki/Advanced-Usage#using-a-default-configuration-file).
+
 
 ## Installation
 
-### Prerequisites
+The easiest way to get started with PHP_CodeSniffer is to download the Phar files for each of the commands:
+```bash
+# Download using curl
+curl -OL https://phars.phpcodesniffer.com/phpcs.phar
+curl -OL https://phars.phpcodesniffer.com/phpcbf.phar
 
-Prophecy requires PHP 7.2.0 or greater.
+# Or download using wget
+wget https://phars.phpcodesniffer.com/phpcs.phar
+wget https://phars.phpcodesniffer.com/phpcbf.phar
 
-### Setup through composer
+# Then test the downloaded PHARs
+php phpcs.phar -h
+php phpcbf.phar -h
+```
 
-First, add Prophecy to the list of dependencies inside your `composer.json`:
+These Phars are signed with the official Release key for PHPCS with the
+fingerprint `D91D 8696 3AF3 A29B 6520 4622 97B0 2DD8 E507 1466`.
+
+As of PHP_CodeSniffer 3.10.3, the provenance of PHAR files associated with a release can be verified via [GitHub Artifact Attestations](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations) using the [GitHub CLI tool](https://cli.github.com/) with the following command: `gh attestation verify [phpcs|phpcbf].phar -o PHPCSStandards`.
+
+### Composer
+If you use Composer, you can install PHP_CodeSniffer system-wide with the following command:
+```bash
+composer global require "squizlabs/php_codesniffer=*"
+```
+Make sure you have the composer bin dir in your PATH. The default value is `~/.composer/vendor/bin/`, but you can check the value that you need to use by running `composer global config bin-dir --absolute`.
+
+Or alternatively, include a dependency for `squizlabs/php_codesniffer` in your `composer.json` file. For example:
 
 ```json
 {
     "require-dev": {
-        "phpspec/prophecy": "~1.0"
+        "squizlabs/php_codesniffer": "^3.0"
     }
 }
 ```
 
-Then simply install it with composer:
-
+You will then be able to run PHP_CodeSniffer from the vendor bin directory:
 ```bash
-$> composer install --prefer-dist
+./vendor/bin/phpcs -h
+./vendor/bin/phpcbf -h
 ```
 
-You can read more about Composer on its [official webpage](http://getcomposer.org).
-
-## How to use it
-
-First of all, in Prophecy every word has a logical meaning, even the name of the library
-itself (Prophecy). When you start feeling that, you'll become very fluid with this
-tool.
-
-For example, Prophecy has been named that way because it concentrates on describing the future
-behavior of objects with very limited knowledge about them. But as with any other prophecy,
-those object prophecies can't create themselves - there should be a Prophet:
-
-```php
-$prophet = new Prophecy\Prophet;
+### Phive
+If you use Phive, you can install PHP_CodeSniffer as a project tool using the following commands:
+```bash
+phive install --trust-gpg-keys D91D86963AF3A29B6520462297B02DD8E5071466 phpcs
+phive install --trust-gpg-keys D91D86963AF3A29B6520462297B02DD8E5071466 phpcbf
+```
+You will then be able to run PHP_CodeSniffer from the `tools` directory:
+```bash
+./tools/phpcs -h
+./tools/phpcbf -h
 ```
 
-The Prophet creates prophecies by *prophesizing* them:
-
-```php
-$prophecy = $prophet->prophesize();
+### Git Clone
+You can also download the PHP_CodeSniffer source and run the `phpcs` and `phpcbf` commands directly from the Git clone:
+```bash
+git clone https://github.com/PHPCSStandards/PHP_CodeSniffer.git
+cd PHP_CodeSniffer
+php bin/phpcs -h
+php bin/phpcbf -h
 ```
 
-The result of the `prophesize()` method call is a new object of class `ObjectProphecy`. Yes,
-that's your specific object prophecy, which describes how your object would behave
-in the near future. But first, you need to specify which object you're talking about,
-right?
+## Getting Started
 
-```php
-$prophecy->willExtend('stdClass');
-$prophecy->willImplement('SessionHandlerInterface');
+The default coding standard used by PHP_CodeSniffer is the PEAR coding standard. To check a file against the PEAR coding standard, simply specify the file's location:
+```bash
+phpcs /path/to/code/myfile.php
+```
+Or if you wish to check an entire directory you can specify the directory location instead of a file.
+```bash
+phpcs /path/to/code-directory
+```
+If you wish to check your code against the PSR-12 coding standard, use the `--standard` command line argument:
+```bash
+phpcs --standard=PSR12 /path/to/code-directory
 ```
 
-There are 2 interesting calls - `willExtend` and `willImplement`. The first one tells
-object prophecy that our object should extend a specific class. The second one says that
-it should implement some interface. Obviously, objects in PHP can implement multiple
-interfaces, but extend only one parent class.
+If PHP_CodeSniffer finds any coding standard errors, a report will be shown after running the command.
 
-### Dummies
+Full usage information and example reports are available on the [usage page](https://github.com/PHPCSStandards/PHP_CodeSniffer/wiki/Usage).
 
-Ok, now we have our object prophecy. What can we do with it? First of all, we can get
-our object *dummy* by revealing its prophecy:
+## Documentation
 
-```php
-$dummy = $prophecy->reveal();
-```
+The documentation for PHP_CodeSniffer is available on the [GitHub wiki](https://github.com/PHPCSStandards/PHP_CodeSniffer/wiki).
 
-The `$dummy` variable now holds a special dummy object. Dummy objects are objects that extend
-and/or implement preset classes/interfaces by overriding all their public methods. The key
-point about dummies is that they do not hold any logic - they just do nothing. Any method
-of the dummy will always return `null` and the dummy will never throw any exceptions.
-Dummy is your friend if you don't care about the actual behavior of this double and just need
-a token object to satisfy a method typehint.
+## Issues
 
-You need to understand one thing - a dummy is not a prophecy. Your object prophecy is still
-assigned to `$prophecy` variable and in order to manipulate with your expectations, you
-should work with it. `$dummy` is a dummy - a simple php object that tries to fulfil your
-prophecy.
+Bug reports and feature requests can be submitted on the [GitHub Issue Tracker](https://github.com/PHPCSStandards/PHP_CodeSniffer/issues).
 
-### Stubs
+## Contributing
 
-Ok, now we know how to create basic prophecies and reveal dummies from them. That's
-awesome if we don't care about our _doubles_ (objects that reflect originals)
-interactions. If we do, we need to use *stubs* or *mocks*.
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for information.
 
-A stub is an object double, which doesn't have any expectations about the object behavior,
-but when put in specific environment, behaves in specific way. Ok, I know, it's cryptic,
-but bear with me for a minute. Simply put, a stub is a dummy, which depending on the called
-method signature does different things (has logic). To create stubs in Prophecy:
+## Versioning
 
-```php
-$prophecy->read('123')->willReturn('value');
-```
+PHP_CodeSniffer uses a `MAJOR.MINOR.PATCH` version number format.
 
-Oh wow. We've just made an arbitrary call on the object prophecy? Yes, we did. And this
-call returned us a new object instance of class `MethodProphecy`. Yep, that's a specific
-method with arguments prophecy. Method prophecies give you the ability to create method
-promises or predictions. We'll talk about method predictions later in the _Mocks_ section.
+The `MAJOR` version is incremented when:
+- backwards-incompatible changes are made to how the `phpcs` or `phpcbf` commands are used, or
+- backwards-incompatible changes are made to the `ruleset.xml` format, or
+- backwards-incompatible changes are made to the API used by sniff developers, or
+- custom PHP_CodeSniffer token types are removed, or
+- existing sniffs are removed from PHP_CodeSniffer entirely
 
-#### Promises
+The `MINOR` version is incremented when:
+- new backwards-compatible features are added to the `phpcs` and `phpcbf` commands, or
+- backwards-compatible changes are made to the `ruleset.xml` format, or
+- backwards-compatible changes are made to the API used by sniff developers, or
+- new sniffs are added to an included standard, or
+- existing sniffs are removed from an included standard
 
-Promises are logical blocks, that represent your fictional methods in prophecy terms
-and they are handled by the `MethodProphecy::will(PromiseInterface $promise)` method.
-As a matter of fact, the call that we made earlier (`willReturn('value')`) is a simple
-shortcut to:
+> NOTE: Backwards-compatible changes to the API used by sniff developers will allow an existing sniff to continue running without producing fatal errors but may not result in the sniff reporting the same errors as it did previously without changes being required.
 
-```php
-$prophecy->read('123')->will(new Prophecy\Promise\ReturnPromise(array('value')));
-```
+The `PATCH` version is incremented when:
+- backwards-compatible bug fixes are made
 
-This promise will cause any call to our double's `read()` method with exactly one
-argument - `'123'` to always return `'value'`. But that's only for this
-promise, there's plenty others you can use:
-
-- `ReturnPromise` or `->willReturn(1)` - returns a value from a method call
-- `ReturnArgumentPromise` or `->willReturnArgument($index)` - returns the nth method argument from call
-- `ThrowPromise` or `->willThrow($exception)` - causes the method to throw specific exception
-- `CallbackPromise` or `->will($callback)` - gives you a quick way to define your own custom logic
-
-Keep in mind, that you can always add even more promises by implementing
-`Prophecy\Promise\PromiseInterface`.
-
-#### Method prophecies idempotency
-
-Prophecy enforces same method prophecies and, as a consequence, same promises and
-predictions for the same method calls with the same arguments. This means:
-
-```php
-$methodProphecy1 = $prophecy->read('123');
-$methodProphecy2 = $prophecy->read('123');
-$methodProphecy3 = $prophecy->read('321');
-
-$methodProphecy1 === $methodProphecy2;
-$methodProphecy1 !== $methodProphecy3;
-```
-
-That's interesting, right? Now you might ask me how would you define more complex
-behaviors where some method call changes behavior of others. In PHPUnit or Mockery
-you do that by predicting how many times your method will be called. In Prophecy,
-you'll use promises for that:
-
-```php
-$user->getName()->willReturn(null);
-
-// For PHP 5.4
-$user->setName('everzet')->will(function () {
-    $this->getName()->willReturn('everzet');
-});
-
-// For PHP 5.3
-$user->setName('everzet')->will(function ($args, $user) {
-    $user->getName()->willReturn('everzet');
-});
-
-// Or
-$user->setName('everzet')->will(function ($args) use ($user) {
-    $user->getName()->willReturn('everzet');
-});
-```
-
-And now it doesn't matter how many times or in which order your methods are called.
-What matters is their behaviors and how well you faked it.
-
-Note: If the method is called several times, you can use the following syntax to return different
-values for each call:
-
-```php
-$prophecy->read('123')->willReturn(1, 2, 3);
-```
-
-This feature is actually not recommended for most cases. Relying on the order of
-calls for the same arguments tends to make test fragile, as adding one more call
-can break everything.
-
-#### Arguments wildcarding
-
-The previous example is awesome (at least I hope it is for you), but that's not
-optimal enough. We hardcoded `'everzet'` in our expectation. Isn't there a better
-way? In fact there is, but it involves understanding what this `'everzet'`
-actually is.
-
-You see, even if method arguments used during method prophecy creation look
-like simple method arguments, in reality they are not. They are argument token
-wildcards.  As a matter of fact, `->setName('everzet')` looks like a simple call just
-because Prophecy automatically transforms it under the hood into:
-
-```php
-$user->setName(new Prophecy\Argument\Token\ExactValueToken('everzet'));
-```
-
-Those argument tokens are simple PHP classes, that implement
-`Prophecy\Argument\Token\TokenInterface` and tell Prophecy how to compare real arguments
-with your expectations. And yes, those classnames are damn big. That's why there's a
-shortcut class `Prophecy\Argument`, which you can use to create tokens like that:
-
-```php
-use Prophecy\Argument;
-
-$user->setName(Argument::exact('everzet'));
-```
-
-`ExactValueToken` is not very useful in our case as it forced us to hardcode the username.
-That's why Prophecy comes bundled with a bunch of other tokens:
-
-- `IdenticalValueToken` or `Argument::is($value)` - checks that the argument is identical to a specific value
-- `ExactValueToken` or `Argument::exact($value)` - checks that the argument matches a specific value
-- `TypeToken` or `Argument::type($typeOrClass)` - checks that the argument matches a specific type or
-  classname
-- `ObjectStateToken` or `Argument::which($method, $value)` - checks that the argument method returns
-  a specific value
-- `CallbackToken` or `Argument::that(callback)` - checks that the argument matches a custom callback
-- `AnyValueToken` or `Argument::any()` - matches any argument
-- `AnyValuesToken` or `Argument::cetera()` - matches any arguments to the rest of the signature
-- `StringContainsToken` or `Argument::containingString($value)` - checks that the argument contains a specific string value
-- `InArrayToken` or `Argument::in($array)` - checks if value is in array
-- `NotInArrayToken` or `Argument::notIn($array)` - checks if value is not in array
-
-And you can add even more by implementing `TokenInterface` with your own custom classes.
-
-So, let's refactor our initial `{set,get}Name()` logic with argument tokens:
-
-```php
-use Prophecy\Argument;
-
-$user->getName()->willReturn(null);
-
-// For PHP 5.4
-$user->setName(Argument::type('string'))->will(function ($args) {
-    $this->getName()->willReturn($args[0]);
-});
-
-// For PHP 5.3
-$user->setName(Argument::type('string'))->will(function ($args, $user) {
-    $user->getName()->willReturn($args[0]);
-});
-
-// Or
-$user->setName(Argument::type('string'))->will(function ($args) use ($user) {
-    $user->getName()->willReturn($args[0]);
-});
-```
-
-That's it. Now our `{set,get}Name()` prophecy will work with any string argument provided to it.
-We've just described how our stub object should behave, even though the original object could have
-no behavior whatsoever.
-
-One last bit about arguments now. You might ask, what happens in case of:
-
-```php
-use Prophecy\Argument;
-
-$user->getName()->willReturn(null);
-
-// For PHP 5.4
-$user->setName(Argument::type('string'))->will(function ($args) {
-    $this->getName()->willReturn($args[0]);
-});
-
-// For PHP 5.3
-$user->setName(Argument::type('string'))->will(function ($args, $user) {
-    $user->getName()->willReturn($args[0]);
-});
-
-// Or
-$user->setName(Argument::type('string'))->will(function ($args) use ($user) {
-    $user->getName()->willReturn($args[0]);
-});
-
-$user->setName(Argument::any())->will(function () {
-});
-```
-
-Nothing. Your stub will continue behaving the way it did before. That's because of how
-arguments wildcarding works. Every argument token type has a different score level, which
-wildcard then uses to calculate the final arguments match score and use the method prophecy
-promise that has the highest score. In this case, `Argument::type()` in case of success
-scores `5` and `Argument::any()` scores `3`. So the type token wins, as does the first
-`setName()` method prophecy and its promise. The simple rule of thumb - more precise token
-always wins.
-
-#### Getting stub objects
-
-Ok, now we know how to define our prophecy method promises, let's get our stub from
-it:
-
-```php
-$stub = $prophecy->reveal();
-```
-
-As you might see, the only difference between how we get dummies and stubs is that with
-stubs we describe every object conversation instead of just agreeing with `null` returns
-(object being *dummy*). As a matter of fact, after you define your first promise
-(method call), Prophecy will force you to define all the communications - it throws
-the `UnexpectedCallException` for any call you didn't describe with object prophecy before
-calling it on a stub.
-
-### Mocks
-
-Now we know how to define doubles without behavior (dummies) and doubles with behavior, but
-no expectations (stubs). What's left is doubles for which we have some expectations. These
-are called mocks and in Prophecy they look almost exactly the same as stubs, except that
-they define *predictions* instead of *promises* on method prophecies:
-
-```php
-$entityManager->flush()->shouldBeCalled();
-```
-
-#### Predictions
-
-The `shouldBeCalled()` method here assigns `CallPrediction` to our method prophecy.
-Predictions are a delayed behavior check for your prophecies. You see, during the entire lifetime
-of your doubles, Prophecy records every single call you're making against it inside your
-code. After that, Prophecy can use this collected information to check if it matches defined
-predictions. You can assign predictions to method prophecies using the
-`MethodProphecy::should(PredictionInterface $prediction)` method. As a matter of fact,
-the `shouldBeCalled()` method we used earlier is just a shortcut to:
-
-```php
-$entityManager->flush()->should(new Prophecy\Prediction\CallPrediction());
-```
-
-It checks if your method of interest (that matches both the method name and the arguments wildcard)
-was called 1 or more times. If the prediction failed then it throws an exception. When does this
-check happen? Whenever you call `checkPredictions()` on the main Prophet object:
-
-```php
-$prophet->checkPredictions();
-```
-
-In PHPUnit, you would want to put this call into the `tearDown()` method. If no predictions
-are defined, it would do nothing. So it won't harm to call it after every test.
-
-There are plenty more predictions you can play with:
-
-- `CallPrediction` or `shouldBeCalled()` - checks that the method has been called 1 or more times
-- `NoCallsPrediction` or `shouldNotBeCalled()` - checks that the method has not been called
-- `CallTimesPrediction` or `shouldBeCalledTimes($count)` - checks that the method has been called
-  `$count` times
-- `CallbackPrediction` or `should($callback)` - checks the method against your own custom callback
-
-Of course, you can always create your own custom prediction any time by implementing
-`PredictionInterface`.
-
-### Spies
-
-The last bit of awesomeness in Prophecy is out-of-the-box spies support. As I said in the previous
-section, Prophecy records every call made during the double's entire lifetime. This means
-you don't need to record predictions in order to check them. You can also do it
-manually by using the `MethodProphecy::shouldHave(PredictionInterface $prediction)` method:
-
-```php
-$em = $prophet->prophesize('Doctrine\ORM\EntityManager');
-
-$controller->createUser($em->reveal());
-
-$em->flush()->shouldHaveBeenCalled();
-```
-
-Such manipulation with doubles is called spying. And with Prophecy it just works.
-
-
-## FAQ
-
-### Can I call the original methods on a prophesized class?
-
-Prophecy does not support calling the original methods on a phrophesized class. If you find yourself needing to mock some methods of a class while calling the original version of other methods, it's likely a sign that your class violates the [single-responsibility principle](https://en.wikipedia.org/wiki/Single-responsibility_principle) and should be refactored.
+> NOTE: As PHP_CodeSniffer exists to report and fix issues, most bugs are the result of coding standard errors being incorrectly reported or coding standard errors not being reported when they should be. This means that the messages produced by PHP_CodeSniffer, and the fixes it makes, are likely to be different between PATCH versions.
